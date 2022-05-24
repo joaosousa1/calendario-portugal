@@ -1,0 +1,385 @@
+<!-- © João Sousa 2022 -->
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Calendário</title>
+</head>
+<body>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        :root {
+            --bg: #303030;
+            --dia-bg: #1f1f1f;
+            --dia-cor: #cfcfcf;
+            --semana-bg: #8aabb4;
+            --semana-cor: #242424;
+            --fim-semana-bg: #5bbafa;
+            --fim-semana-cor: #242424;
+            --feriado-bg: #3df383;
+            --feriado-cor: #3d3d3d;
+            --hoje-bg: #fdf148;
+            --hoje-cor: #1f1f1f;
+            --label-cor: #cfcfcf;
+            --bt-bg: #1f1f1f;
+            --bt-cor: #cfcfcf;
+        }
+        body {
+            background-color: var(--bg);
+            font-family: roboto;
+            margin: 10px;
+        }
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .ano {
+            color: var(--label-cor);
+            text-align: center;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+        }
+        .grade {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .grade-meses {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .dia {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dia-cor);
+            height: 15px;
+            background-color: var(--dia-bg);
+            font-size: 0.6em;
+        }
+        .fim-semana {
+            color: #242424;
+            background-color: var(--fim-semana-bg);
+            text-align: center;
+            height: 15px;
+        }
+        .fim-semana-col {
+            color: rgb(36, 36, 36);
+            background-color: var(--fim-semana-bg);
+        }
+        .semana {
+            color: var(--semana-cor);
+            background-color: var(--semana-bg);
+            text-align: center;
+        }
+        .hoje {
+            color: var(--hoje-cor);
+            background-color: var(--hoje-bg);
+        }
+        .label {
+            color: var(--label-cor);
+            text-align: center;
+            font-size: 1em;
+        }
+        .label-feriados {
+            color: var(--label-cor);
+            font-size: 0.9em;
+            margin-top: 50px;
+        }
+        .feriados {
+            display: grid;
+            grid-template-columns: repeat(5, auto);
+            grid-template-rows: auto auto auto auto auto auto auto;
+            grid-auto-flow: column;
+            color: var(--label-cor);
+            text-align: left;
+            font-size: 0.6em;
+        }
+        .feriados p {
+            margin: 3px;
+        }
+        .feriado-dia {
+            background-color: var(--feriado-bg);
+            color: var(--feriado-cor);
+        }
+        .bts {
+            height: 40px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        button {
+            font-family: roboto;
+            font-size: 0.7em;
+            border: none;
+            padding: 10px;
+            background-color: var(--dia-bg);
+            color: var(--bt-cor);
+            cursor: pointer;
+        }
+        @media only screen and (min-width: 840px) {
+            .dia {
+                height: 20px;
+                width: 25px;
+                font-size: 0.7em;
+            }
+            .label {
+                font-size: 1.3em;
+            }
+            .grade-meses {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+            }
+        }
+        @page {
+            size: A4;
+            margin: 10mm;
+            /* margin-right: 126mm; */
+        }
+        @media print {
+            :root {
+                --bg: white;
+                --dia-bg: white;
+                --dia-cor: #1f1f1f;
+                --semana-bg: #d6d6d6;
+                --semana-cor: #1f1f1f;
+                --fim-semana-bg: #d6d6d6;
+                --fim-semana-cor: #1f1f1f;
+                --feriado-bg: #a3a3a3;
+                --feriado-cor: #1f1f1f;
+                --label-cor: #1f1f1f;
+            }
+            .content {
+                width: 180mm;
+                height: 250mm;
+            }
+            /* no modo de impressão esconde os botões */
+            button {
+                display: none;
+            }
+            .dia {
+                border: 0px solid black;
+            }
+            .hoje {
+                background-color: white;
+                color: #1f1f1f;
+            }
+            .grade-meses {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                font-size: 1em;
+                gap: 30px;
+            }
+        }
+    </style>
+    <div class="content">
+        <div class="bts">
+            <button onclick="tras()">ano anterior</button>
+            <button onclick="hoje()" class="hoje">hoje</button>
+            <button onclick="frente()">próximo ano</button>
+        </div>
+        <div id="ano" class="ano"></div>
+        <div id="meses" class="grade-meses"></div>
+        <h3 id="labelFeriados" class="label-feriados">Feriados:</h3>
+        <div id="feriadosL" class="feriados"></div>
+    </div>
+</body>
+<script>
+    const feriadosFixos = [
+        { dia: 1, mes: 1, nome: "Ano Novo" },
+        { dia: 25, mes: 4, nome: "Dia da Liberdade" },
+        { dia: 1, mes: 5, nome: "Dia do Trabalhador" },
+        { dia: 10, mes: 6, nome: "Dia de Portugal" },
+        { dia: 15, mes: 8, nome: "Assunção de Nossa Senhora" },
+        { dia: 5, mes: 10, nome: "Implatação da República" },
+        { dia: 1, mes: 11, nome: "Dia de todos os Santos" },
+        { dia: 1, mes: 12, nome: "Restauração da Independência" },
+        { dia: 8, mes: 12, nome: "Dia da Imaculada Conceição" },
+        { dia: 25, mes: 12, nome: "Natal" },
+    ];
+    let data;
+    let ano;
+    let mes;
+    let feriados = [];
+    let ds = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
+    let m = [
+        "Janeiro",
+        "Fevereiro",
+        "Março",
+        "Abril",
+        "Maio",
+        "Junho",
+        "Julho",
+        "Agosto",
+        "Setembro",
+        "Outubro",
+        "Novembro",
+        "Dezembro",
+    ];
+    function addPascoa(ano) {
+        let P = diasPascoa(ano);
+        feriados = [...feriadosFixos];
+        feriados.push({ dia: P[0], mes: P[1], nome: "Páscoa" });
+        feriados.push({ dia: P[2], mes: P[3], nome: "Sexta Feira Santa" }); //dois dias antes
+        feriados.push({ dia: P[4], mes: P[5], nome: "Corpo de Deus" }); //60 dias depois da Páscoa numa Quinta Feira
+        //por ordem cronologica
+        feriados = feriados.sort((a, b) => {
+            return a.dia - b.dia;
+        });
+        feriados = feriados.sort((a, b) => {
+            return a.mes - b.mes;
+        });
+    }
+    function eFeriado(d, m) {
+        for (let index = 0; index < feriados.length; index++) {
+            if (feriados[index].dia === d && feriados[index].mes === m) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function getNDiasMes(aa, mm) {
+        return new Date(aa, mm + 1, 0).getDate();
+    }
+    function primeiroDiaMes(aa, mm) {
+        //seg ter etc...
+        return new Date(aa, mm, 0).getDay();
+    }
+    function frente() {
+        ano++;
+        loop();
+    }
+    function tras() {
+        ano--;
+        loop();
+    }
+    function loop() {
+        addPascoa(ano);
+        let label = document.getElementById("ano");
+        label.innerText = `${ano}`;
+
+        let labelFeriados = document.getElementById("labelFeriados");
+        labelFeriados.innerText = `Feriados: ${ano}`;
+
+        let element = document.getElementById("meses");
+        element.innerHTML = "";
+
+        for (let index = 0; index < 12; index++) {
+            addMes(index, "meses");
+        }
+        addFeriadosLabel();
+    }
+    function addMes(mes, parent) {
+        let element = document.getElementById(parent);
+        let main = document.createElement("div");
+        let grade = document.createElement("div");
+        grade.classList = "grade"; //add css class grade dentro da grade
+        let label = document.createElement("div");
+        label.classList.add("label");
+        label.innerText = `${m[mes]}`;
+        main.appendChild(label);
+        for (let index = 0; index < ds.length; index++) {
+            let c = document.createElement("div");
+            if (index === 6 || index === 5) {
+                c.classList = "dia fim-semana";
+            } else {
+                c.classList = "dia semana";
+            }
+            c.style.height = "20px";
+            let txt2 = document.createTextNode(`${ds[index]}`);
+            c.appendChild(txt2);
+            grade.appendChild(c);
+        }
+        // indent
+        for (let index = 0; index < primeiroDiaMes(ano, mes); index++) {
+            let c = document.createElement("div");
+            c.classList = "";
+            grade.appendChild(c);
+        }
+        for (let dia = 1; dia <= getNDiasMes(ano, mes); dia++) {
+            let c = document.createElement("div");
+
+            let fimSemana = new Date(ano, mes, dia).getDay();
+
+            if (fimSemana === 6 || fimSemana === 0) {
+                c.classList = "dia fim-semana-col";
+            } else {
+                c.classList = "dia";
+            }
+            // destaca dia de hoje
+            if (
+                data.getDate() === dia &&
+                data.getMonth() === mes &&
+                data.getFullYear() === ano
+            ) {
+                c.classList = "dia hoje";
+            }
+            // adicioina feriados
+            if (eFeriado(dia, mes + 1) === true) {
+                c.classList = "dia feriado-dia";
+            }
+            let txt2 = document.createTextNode(`${dia}`);
+            c.appendChild(txt2);
+            grade.appendChild(c);
+        }
+        main.appendChild(grade);
+        element.appendChild(main);
+    }
+    function addFeriadosLabel() {
+        let fLabel = document.getElementById("feriadosL");
+        fLabel.innerHTML = "";
+        for (let index = 0; index < feriados.length; index++) {
+            let fd = `${feriados[index].dia} ${m[feriados[index].mes - 1]} - ${feriados[index].nome
+                }`;
+            //console.log(fd)
+            let p = document.createElement("p");
+            let f = document.createTextNode(fd);
+            p.appendChild(f);
+            fLabel.appendChild(p);
+        }
+    }
+    // retoma o dia de Páscoa, sexta feira Santa e Corpo de Deus do ano indicado
+    function diasPascoa(ano) {
+        let a = ano % 19;
+        let b = Math.floor(ano / 100);
+        let c = ano % 100;
+        let d = Math.floor(b / 4);
+        let e = b % 4;
+        let f = Math.floor((b + 8) / 25);
+        let g = Math.floor((b - f + 1) / 3);
+        let h = (19 * a + b - d - g + 15) % 30;
+        let i = Math.floor(c / 4);
+        let k = c % 4;
+        let l = (32 + 2 * e + 2 * i - h - k) % 7;
+        let m = Math.floor((a + 11 * h + 22 * l) / 451);
+        let n0 = h + l + 7 * m + 114;
+        let n = Math.floor(n0 / 31) - 1;
+        let p = (n0 % 31) + 1;
+        let pascoa = new Date(ano, n, p);
+        //86400000 um dia em milesegundos
+        let corpoCristo = new Date(pascoa.getTime() + 86400000 * 60); //60 dias depois da Páscoa
+        let sextaSanta = new Date(pascoa.getTime() - 86400000 * 2); //2 dias antes da Páscoa
+        return [
+            pascoa.getDate(),
+            pascoa.getMonth() + 1,
+            sextaSanta.getDate(),
+            sextaSanta.getMonth() + 1,
+            corpoCristo.getDate(),
+            corpoCristo.getMonth() + 1,
+        ];
+        // return array [dia Páscoa, mes Páscoa, dia de sexta feira Santa, mês de sexta feira Santa, dia Corpo de Deus, mes Corpo de Deus]
+    }
+    function hoje() {
+        data = new Date();
+        ano = data.getFullYear();
+        mes = data.getMonth();
+        loop();
+    }
+    hoje();
+</script>
+</html>
