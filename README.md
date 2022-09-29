@@ -2,6 +2,8 @@
 
 ## Suporte para impressão A4.
 
+Calcula os feriados de Portugal que não tem datas fixas.
+
 Ao imprimir, a página fica em preto/branco com 3 colunas e sem botões.
 
 Não se esqueça de colocar no ano pretendido antes de imprimir.
